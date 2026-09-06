@@ -5,10 +5,10 @@ from dotenv import load_dotenv
 # Load environment variables from .env
 load_dotenv()
 
-raw_token = os.getenv("GitHub_access_token") or os.getenv("GITHUB_ACCESS_TOKEN") or os.getenv("GH_ACCESS_TOKEN") or os.getenv("GH_PAT")
-token = raw_token.strip() if raw_token else None
+# Get token from .env or environment
+token = os.getenv("GitHub_access_token") or os.getenv("GITHUB_ACCESS_TOKEN")
 
-headers = {"Authorization": f"token {token}"} if token else {}
+headers = {"Authorization": f"token {token}"}
 
 endpoint = "https://api.github.com/repos/github/explore/contents/topics"
 output_file = os.path.join(os.path.dirname(__file__), "topics_with_aliases.txt")
