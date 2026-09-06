@@ -24,7 +24,8 @@ RAW_GH = ROOT / "raw" / "github"
 
 
 def main() -> int:
-    token = os.getenv("MotherDuck_token") or os.getenv("MOTHERDUCK_TOKEN")
+    raw_token = os.getenv("MotherDuck_token") or os.getenv("MOTHERDUCK_TOKEN") or ""
+    token = raw_token.strip()
     if not token:
         print("[INFO] MotherDuck_token not set. Proceeding to extraction.")
         return 1

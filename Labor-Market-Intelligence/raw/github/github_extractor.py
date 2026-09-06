@@ -74,10 +74,16 @@ _EMERGING_TECH = _RAW_ROOT / "emerging_tech.json"
 # Environment
 # ---------------------------------------------------------------------------
 load_dotenv(_HERE.parent.parent / ".env")       # Labor-Market-Intelligence/.env
-_TOKEN = os.getenv("GitHub_access_token") or os.getenv("GITHUB_ACCESS_TOKEN")
+_raw_token = (
+    os.getenv("GitHub_access_token")
+    or os.getenv("GITHUB_ACCESS_TOKEN")
+    or os.getenv("GH_ACCESS_TOKEN")
+    or os.getenv("GH_PAT")
+)
+_TOKEN = _raw_token.strip() if _raw_token else None
 
 if not _TOKEN:
-    print("[WARN] No GitHub token found in .env — running unauthenticated (60 req/hour).")
+    print("[WARN] No GitHub token found in environment — running unauthenticated (60 req/hour).")
     GITHUB_HEADERS: dict[str, str] = {"Accept": "application/vnd.github+json"}
 else:
     GITHUB_HEADERS = {

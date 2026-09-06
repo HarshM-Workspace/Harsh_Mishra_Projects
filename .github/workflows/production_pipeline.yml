@@ -49,12 +49,24 @@ jobs:
 
       - name: Verify Environment Secrets
         run: |
+          MD_CLEAN="$(echo "${MotherDuck_token}" | tr -d '\r\n ')"
+          GH_CLEAN="$(echo "${GitHub_access_token}" | tr -d '\r\n ')"
+          ADZ_ID_CLEAN="$(echo "${Adzuna_app_id}" | tr -d '\r\n ')"
+          ADZ_API_CLEAN="$(echo "${Adzuna_api}" | tr -d '\r\n ')"
+
+          echo "MotherDuck_token=${MD_CLEAN}" >> $GITHUB_ENV
+          echo "MOTHERDUCK_TOKEN=${MD_CLEAN}" >> $GITHUB_ENV
+          echo "GitHub_access_token=${GH_CLEAN}" >> $GITHUB_ENV
+          echo "GITHUB_ACCESS_TOKEN=${GH_CLEAN}" >> $GITHUB_ENV
+          echo "Adzuna_app_id=${ADZ_ID_CLEAN}" >> $GITHUB_ENV
+          echo "Adzuna_api=${ADZ_API_CLEAN}" >> $GITHUB_ENV
+
           python -c "
           import os, sys
-          md = os.getenv('MotherDuck_token')
-          adz_id = os.getenv('Adzuna_app_id')
-          adz_key = os.getenv('Adzuna_api')
-          gh = os.getenv('GitHub_access_token')
+          md = os.getenv('MotherDuck_token', '').strip()
+          adz_id = os.getenv('Adzuna_app_id', '').strip()
+          adz_key = os.getenv('Adzuna_api', '').strip()
+          gh = os.getenv('GitHub_access_token', '').strip()
 
           print('Secrets Presence Check:')
           print('  MotherDuck_token:', 'Configured' if md else 'MISSING')
