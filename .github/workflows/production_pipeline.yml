@@ -30,7 +30,7 @@ jobs:
       MotherDuck_token: ${{ secrets.MotherDuck_token || secrets.MOTHERDUCK_TOKEN || secrets.motherduck_token }}
       Adzuna_app_id: ${{ secrets.Adzuna_app_id || secrets.ADZUNA_APP_ID }}
       Adzuna_api: ${{ secrets.Adzuna_api || secrets.ADZUNA_API || secrets.ADZUNA_API_KEY }}
-      GitHub_access_token: ${{ secrets.GitHub_access_token || secrets.GITHUB_ACCESS_TOKEN || secrets.GH_PAT || secrets.GITHUB_TOKEN }}
+      GitHub_access_token: ${{ secrets.GH_ACCESS_TOKEN || secrets.GH_PAT || secrets.GitHub_access_token || secrets.GIT_ACCESS_TOKEN }}
 
     steps:
       - name: Checkout repository
