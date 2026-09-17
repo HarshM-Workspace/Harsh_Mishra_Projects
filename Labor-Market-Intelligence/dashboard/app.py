@@ -187,84 +187,105 @@ code {
     border: 1px solid #e2e2dc !important;
 }
 
-/* Navigation Tabs: Segmented Control Bar with High Contrast & Always-Visible Page Names */
+/* Navigation Tabs — Nuclear-specificity fix: always-visible page names */
 div[data-testid="stTabs"] {
     margin-top: 4px !important;
     margin-bottom: 1.5rem !important;
 }
+
+/* Tab bar container: pill-style segmented control */
 div[data-testid="stTabs"] div[data-baseweb="tab-list"],
 div[data-baseweb="tab-list"] {
-    background-color: #f4f4f0 !important;
-    border: 1px solid #e2e2dc !important;
-    border-radius: 6px !important;
+    background-color: #e8e8e2 !important;
+    border: 1px solid #d4d4ce !important;
+    border-radius: 8px !important;
     padding: 4px !important;
-    gap: 4px !important;
-    display: inline-flex !important;
+    gap: 2px !important;
+    display: flex !important;
     width: auto !important;
 }
-div[data-baseweb="tab-border"] {
-    display: none !important;
-}
+div[data-baseweb="tab-border"],
 div[data-baseweb="tab-highlight"] {
     display: none !important;
 }
 
-/* ALL Tab Buttons - Default (Always crisp & visible, never transparent or invisible) */
-[data-testid="stTabs"] button,
-[data-testid="stTabs"] button *,
-[data-testid="stTabs"] button p,
-[data-testid="stTabs"] button span,
-[data-testid="stTabs"] button div,
-div[data-baseweb="tab-list"] button,
-div[data-baseweb="tab-list"] button *,
-button[data-baseweb="tab"],
-button[data-baseweb="tab"] * {
+/* ── Default (non-selected) tab buttons ──
+   Use maximum specificity chain so Streamlit theme vars can't override.
+   Target every possible descendant Streamlit renders inside the button:
+   the raw text, a <p>, a <span>, and a stMarkdownContainer wrapper <div>. */
+html body div[data-testid="stTabs"] button[data-baseweb="tab"],
+html body button[data-baseweb="tab"],
+html body div[data-baseweb="tab-list"] button {
+    background-color: transparent !important;
+    border: 1px solid transparent !important;
+    border-radius: 6px !important;
+    padding: 7px 16px !important;
+    cursor: pointer !important;
+    transition: background 0.15s ease, border-color 0.15s ease !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Force text color on button AND every child node inside it */
+html body div[data-testid="stTabs"] button[data-baseweb="tab"],
+html body div[data-testid="stTabs"] button[data-baseweb="tab"] *,
+html body div[data-testid="stTabs"] button[data-baseweb="tab"] p,
+html body div[data-testid="stTabs"] button[data-baseweb="tab"] span,
+html body div[data-testid="stTabs"] button[data-baseweb="tab"] div,
+html body div[data-testid="stTabs"] button[data-baseweb="tab"] div[data-testid="stMarkdownContainer"],
+html body div[data-testid="stTabs"] button[data-baseweb="tab"] div[data-testid="stMarkdownContainer"] p,
+html body button[data-baseweb="tab"],
+html body button[data-baseweb="tab"] *,
+html body button[data-baseweb="tab"] p,
+html body button[data-baseweb="tab"] div[data-testid="stMarkdownContainer"] p {
+    color: #3a3a35 !important;
+    -webkit-text-fill-color: #3a3a35 !important;
     font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
     font-size: 13px !important;
-    font-weight: 600 !important;
-    color: #3f3f3a !important;
-    -webkit-text-fill-color: #3f3f3a !important;
+    font-weight: 500 !important;
     letter-spacing: 0.01em !important;
     opacity: 1 !important;
     visibility: visible !important;
 }
 
-[data-testid="stTabs"] button,
-div[data-baseweb="tab-list"] button,
-button[data-baseweb="tab"] {
-    background-color: transparent !important;
-    border: 1px solid transparent !important;
-    border-radius: 4px !important;
-    padding: 8px 18px !important;
-    cursor: pointer !important;
-    transition: all 0.15s ease !important;
+/* ── Hover state ── */
+html body div[data-testid="stTabs"] button[data-baseweb="tab"]:hover,
+html body button[data-baseweb="tab"]:hover {
+    background-color: #d8d8d2 !important;
+    border-color: transparent !important;
 }
-
-/* Tab Hover */
-[data-testid="stTabs"] button:hover,
-[data-testid="stTabs"] button:hover *,
-div[data-baseweb="tab-list"] button:hover,
-div[data-baseweb="tab-list"] button:hover *,
-button[data-baseweb="tab"]:hover,
-button[data-baseweb="tab"]:hover * {
+html body div[data-testid="stTabs"] button[data-baseweb="tab"]:hover,
+html body div[data-testid="stTabs"] button[data-baseweb="tab"]:hover *,
+html body div[data-testid="stTabs"] button[data-baseweb="tab"]:hover p,
+html body div[data-testid="stTabs"] button[data-baseweb="tab"]:hover div[data-testid="stMarkdownContainer"] p,
+html body button[data-baseweb="tab"]:hover,
+html body button[data-baseweb="tab"]:hover *,
+html body button[data-baseweb="tab"]:hover p,
+html body button[data-baseweb="tab"]:hover div[data-testid="stMarkdownContainer"] p {
     color: #171717 !important;
     -webkit-text-fill-color: #171717 !important;
-    background-color: #e5e5df !important;
 }
 
-/* Active Selected Tab */
-[data-testid="stTabs"] button[aria-selected="true"],
-[data-testid="stTabs"] button[aria-selected="true"] *,
-div[data-baseweb="tab-list"] button[aria-selected="true"],
-div[data-baseweb="tab-list"] button[aria-selected="true"] *,
-button[data-baseweb="tab"][aria-selected="true"],
-button[data-baseweb="tab"][aria-selected="true"] * {
+/* ── Active/Selected tab ── */
+html body div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"],
+html body button[data-baseweb="tab"][aria-selected="true"] {
+    background-color: #ffffff !important;
+    border: 1px solid #c8c8c2 !important;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.10) !important;
+}
+html body div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"],
+html body div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] *,
+html body div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] p,
+html body div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] div[data-testid="stMarkdownContainer"] p,
+html body button[data-baseweb="tab"][aria-selected="true"],
+html body button[data-baseweb="tab"][aria-selected="true"] *,
+html body button[data-baseweb="tab"][aria-selected="true"] p,
+html body button[data-baseweb="tab"][aria-selected="true"] div[data-testid="stMarkdownContainer"] p {
     color: #171717 !important;
     -webkit-text-fill-color: #171717 !important;
     font-weight: 700 !important;
-    background-color: #ffffff !important;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
-    border: 1px solid #d4d4ce !important;
+    opacity: 1 !important;
+    visibility: visible !important;
 }
 
 /* Radio Selector Pills: Dark text on light background (Never white on white) */
