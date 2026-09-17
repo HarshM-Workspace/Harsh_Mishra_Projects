@@ -14,7 +14,6 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-import streamlit.components.v1 as components
 
 # ── Page Config ─────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -188,74 +187,84 @@ code {
     border: 1px solid #e2e2dc !important;
 }
 
-/* ── Navigation Tabs: always-visible labels using .stTabs class + aria-selected ── */
-.stTabs [data-baseweb="tab-list"] {
-    background-color: #e8e8e2 !important;
-    border: 1px solid #d4d4ce !important;
-    border-radius: 8px !important;
-    padding: 4px !important;
-    gap: 2px !important;
-    margin-bottom: 1rem !important;
+/* Navigation Tabs: Segmented Control Bar with High Contrast & Always-Visible Page Names */
+div[data-testid="stTabs"] {
+    margin-top: 4px !important;
+    margin-bottom: 1.5rem !important;
 }
-.stTabs [data-baseweb="tab-border"],
-.stTabs [data-baseweb="tab-highlight"] {
+div[data-testid="stTabs"] div[data-baseweb="tab-list"],
+div[data-baseweb="tab-list"] {
+    background-color: #f4f4f0 !important;
+    border: 1px solid #e2e2dc !important;
+    border-radius: 6px !important;
+    padding: 4px !important;
+    gap: 4px !important;
+    display: inline-flex !important;
+    width: auto !important;
+}
+div[data-baseweb="tab-border"] {
+    display: none !important;
+}
+div[data-baseweb="tab-highlight"] {
     display: none !important;
 }
 
-/* ALL tabs (selected + unselected) — base button shape */
-.stTabs [data-baseweb="tab"] {
+/* ALL Tab Buttons - Default (Always crisp & visible, never transparent or invisible) */
+[data-testid="stTabs"] button,
+[data-testid="stTabs"] button *,
+[data-testid="stTabs"] button p,
+[data-testid="stTabs"] button span,
+[data-testid="stTabs"] button div,
+div[data-baseweb="tab-list"] button,
+div[data-baseweb="tab-list"] button *,
+button[data-baseweb="tab"],
+button[data-baseweb="tab"] * {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    color: #3f3f3a !important;
+    -webkit-text-fill-color: #3f3f3a !important;
+    letter-spacing: 0.01em !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+[data-testid="stTabs"] button,
+div[data-baseweb="tab-list"] button,
+button[data-baseweb="tab"] {
     background-color: transparent !important;
     border: 1px solid transparent !important;
-    border-radius: 6px !important;
-    padding: 7px 18px !important;
+    border-radius: 4px !important;
+    padding: 8px 18px !important;
     cursor: pointer !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    transition: background 0.15s ease !important;
+    transition: all 0.15s ease !important;
 }
 
-/* ── Unselected tabs: explicit dark text (the real fix) ── */
-.stTabs [data-baseweb="tab"][aria-selected="false"],
-.stTabs [data-baseweb="tab"][aria-selected="false"] p,
-.stTabs [data-baseweb="tab"][aria-selected="false"] span,
-.stTabs [data-baseweb="tab"][aria-selected="false"] div,
-.stTabs [data-baseweb="tab"][aria-selected="false"] * {
-    color: #3a3a35 !important;
-    -webkit-text-fill-color: #3a3a35 !important;
-    font-family: 'Plus Jakarta Sans', sans-serif !important;
-    font-size: 13px !important;
-    font-weight: 500 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-}
-
-/* ── Hover ── */
-.stTabs [data-baseweb="tab"]:hover {
-    background-color: #d0d0ca !important;
-}
-.stTabs [data-baseweb="tab"]:hover,
-.stTabs [data-baseweb="tab"]:hover p,
-.stTabs [data-baseweb="tab"]:hover span,
-.stTabs [data-baseweb="tab"]:hover * {
+/* Tab Hover */
+[data-testid="stTabs"] button:hover,
+[data-testid="stTabs"] button:hover *,
+div[data-baseweb="tab-list"] button:hover,
+div[data-baseweb="tab-list"] button:hover *,
+button[data-baseweb="tab"]:hover,
+button[data-baseweb="tab"]:hover * {
     color: #171717 !important;
     -webkit-text-fill-color: #171717 !important;
+    background-color: #e5e5df !important;
 }
 
-/* ── Selected/Active tab ── */
-.stTabs [data-baseweb="tab"][aria-selected="true"] {
-    background-color: #ffffff !important;
-    border: 1px solid #c4c4be !important;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.10) !important;
-}
-.stTabs [data-baseweb="tab"][aria-selected="true"],
-.stTabs [data-baseweb="tab"][aria-selected="true"] p,
-.stTabs [data-baseweb="tab"][aria-selected="true"] span,
-.stTabs [data-baseweb="tab"][aria-selected="true"] * {
+/* Active Selected Tab */
+[data-testid="stTabs"] button[aria-selected="true"],
+[data-testid="stTabs"] button[aria-selected="true"] *,
+div[data-baseweb="tab-list"] button[aria-selected="true"],
+div[data-baseweb="tab-list"] button[aria-selected="true"] *,
+button[data-baseweb="tab"][aria-selected="true"],
+button[data-baseweb="tab"][aria-selected="true"] * {
     color: #171717 !important;
     -webkit-text-fill-color: #171717 !important;
     font-weight: 700 !important;
-    opacity: 1 !important;
-    visibility: visible !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid #d4d4ce !important;
 }
 
 /* Radio Selector Pills: Dark text on light background (Never white on white) */
@@ -394,60 +403,6 @@ input[type="text"]:focus {
 }
 </style>
 """, unsafe_allow_html=True)
-
-# ── JS: Force tab label colors via MutationObserver (bypasses CSS cascade) ────
-# Injects a hidden iframe that reaches window.parent.document and applies
-# inline style.color directly on every tab <p> — inline styles beat all CSS.
-components.html("""
-<script>
-(function() {
-  function applyTabColors(doc) {
-    try {
-      var buttons = doc.querySelectorAll('button[data-baseweb="tab"]');
-      buttons.forEach(function(btn) {
-        var isActive = btn.getAttribute('aria-selected') === 'true';
-        var color = isActive ? '#171717' : '#3a3a35';
-        var weight = isActive ? '700' : '500';
-        // Apply to the button itself and every descendant
-        [btn].concat(Array.from(btn.querySelectorAll('*'))).forEach(function(el) {
-          el.style.setProperty('color', color, 'important');
-          el.style.setProperty('-webkit-text-fill-color', color, 'important');
-          el.style.setProperty('opacity', '1', 'important');
-          el.style.setProperty('visibility', 'visible', 'important');
-        });
-        btn.style.setProperty('font-weight', weight, 'important');
-      });
-    } catch(e) {}
-  }
-
-  function init() {
-    var doc = window.parent.document;
-    // Apply immediately
-    applyTabColors(doc);
-    // Re-apply on any DOM change (tab clicks cause attribute mutations)
-    var observer = new MutationObserver(function() {
-      applyTabColors(doc);
-    });
-    observer.observe(doc.body, {
-      subtree: true,
-      attributes: true,
-      attributeFilter: ['aria-selected'],
-      childList: true
-    });
-  }
-
-  // Wait for DOM to be ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', init);
-  } else {
-    init();
-  }
-  // Also fire after a small delay to catch Streamlit's late rendering
-  setTimeout(init, 500);
-  setTimeout(init, 1500);
-})();
-</script>
-""", height=0, width=0)
 
 
 # ── Data Loading with Dynamic Year Extraction ────────────────────────────────
