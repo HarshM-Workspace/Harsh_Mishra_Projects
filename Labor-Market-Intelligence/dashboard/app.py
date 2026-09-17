@@ -14,6 +14,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
+import streamlit.components.v1 as components
 
 # ── Page Config ─────────────────────────────────────────────────────────────
 st.set_page_config(
@@ -187,100 +188,69 @@ code {
     border: 1px solid #e2e2dc !important;
 }
 
-/* Navigation Tabs — Nuclear-specificity fix: always-visible page names */
-div[data-testid="stTabs"] {
-    margin-top: 4px !important;
-    margin-bottom: 1.5rem !important;
-}
-
-/* Tab bar container: pill-style segmented control */
-div[data-testid="stTabs"] div[data-baseweb="tab-list"],
-div[data-baseweb="tab-list"] {
+/* ── Navigation Tabs: always-visible labels using .stTabs class + aria-selected ── */
+.stTabs [data-baseweb="tab-list"] {
     background-color: #e8e8e2 !important;
     border: 1px solid #d4d4ce !important;
     border-radius: 8px !important;
     padding: 4px !important;
     gap: 2px !important;
-    display: flex !important;
-    width: auto !important;
+    margin-bottom: 1rem !important;
 }
-div[data-baseweb="tab-border"],
-div[data-baseweb="tab-highlight"] {
+.stTabs [data-baseweb="tab-border"],
+.stTabs [data-baseweb="tab-highlight"] {
     display: none !important;
 }
 
-/* ── Default (non-selected) tab buttons ──
-   Use maximum specificity chain so Streamlit theme vars can't override.
-   Target every possible descendant Streamlit renders inside the button:
-   the raw text, a <p>, a <span>, and a stMarkdownContainer wrapper <div>. */
-html body div[data-testid="stTabs"] button[data-baseweb="tab"],
-html body button[data-baseweb="tab"],
-html body div[data-baseweb="tab-list"] button {
+/* ALL tabs (selected + unselected) — base button shape */
+.stTabs [data-baseweb="tab"] {
     background-color: transparent !important;
     border: 1px solid transparent !important;
     border-radius: 6px !important;
-    padding: 7px 16px !important;
+    padding: 7px 18px !important;
     cursor: pointer !important;
-    transition: background 0.15s ease, border-color 0.15s ease !important;
     opacity: 1 !important;
     visibility: visible !important;
+    transition: background 0.15s ease !important;
 }
 
-/* Force text color on button AND every child node inside it */
-html body div[data-testid="stTabs"] button[data-baseweb="tab"],
-html body div[data-testid="stTabs"] button[data-baseweb="tab"] *,
-html body div[data-testid="stTabs"] button[data-baseweb="tab"] p,
-html body div[data-testid="stTabs"] button[data-baseweb="tab"] span,
-html body div[data-testid="stTabs"] button[data-baseweb="tab"] div,
-html body div[data-testid="stTabs"] button[data-baseweb="tab"] div[data-testid="stMarkdownContainer"],
-html body div[data-testid="stTabs"] button[data-baseweb="tab"] div[data-testid="stMarkdownContainer"] p,
-html body button[data-baseweb="tab"],
-html body button[data-baseweb="tab"] *,
-html body button[data-baseweb="tab"] p,
-html body button[data-baseweb="tab"] div[data-testid="stMarkdownContainer"] p {
+/* ── Unselected tabs: explicit dark text (the real fix) ── */
+.stTabs [data-baseweb="tab"][aria-selected="false"],
+.stTabs [data-baseweb="tab"][aria-selected="false"] p,
+.stTabs [data-baseweb="tab"][aria-selected="false"] span,
+.stTabs [data-baseweb="tab"][aria-selected="false"] div,
+.stTabs [data-baseweb="tab"][aria-selected="false"] * {
     color: #3a3a35 !important;
     -webkit-text-fill-color: #3a3a35 !important;
-    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
     font-size: 13px !important;
     font-weight: 500 !important;
-    letter-spacing: 0.01em !important;
     opacity: 1 !important;
     visibility: visible !important;
 }
 
-/* ── Hover state ── */
-html body div[data-testid="stTabs"] button[data-baseweb="tab"]:hover,
-html body button[data-baseweb="tab"]:hover {
-    background-color: #d8d8d2 !important;
-    border-color: transparent !important;
+/* ── Hover ── */
+.stTabs [data-baseweb="tab"]:hover {
+    background-color: #d0d0ca !important;
 }
-html body div[data-testid="stTabs"] button[data-baseweb="tab"]:hover,
-html body div[data-testid="stTabs"] button[data-baseweb="tab"]:hover *,
-html body div[data-testid="stTabs"] button[data-baseweb="tab"]:hover p,
-html body div[data-testid="stTabs"] button[data-baseweb="tab"]:hover div[data-testid="stMarkdownContainer"] p,
-html body button[data-baseweb="tab"]:hover,
-html body button[data-baseweb="tab"]:hover *,
-html body button[data-baseweb="tab"]:hover p,
-html body button[data-baseweb="tab"]:hover div[data-testid="stMarkdownContainer"] p {
+.stTabs [data-baseweb="tab"]:hover,
+.stTabs [data-baseweb="tab"]:hover p,
+.stTabs [data-baseweb="tab"]:hover span,
+.stTabs [data-baseweb="tab"]:hover * {
     color: #171717 !important;
     -webkit-text-fill-color: #171717 !important;
 }
 
-/* ── Active/Selected tab ── */
-html body div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"],
-html body button[data-baseweb="tab"][aria-selected="true"] {
+/* ── Selected/Active tab ── */
+.stTabs [data-baseweb="tab"][aria-selected="true"] {
     background-color: #ffffff !important;
-    border: 1px solid #c8c8c2 !important;
+    border: 1px solid #c4c4be !important;
     box-shadow: 0 1px 4px rgba(0,0,0,0.10) !important;
 }
-html body div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"],
-html body div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] *,
-html body div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] p,
-html body div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] div[data-testid="stMarkdownContainer"] p,
-html body button[data-baseweb="tab"][aria-selected="true"],
-html body button[data-baseweb="tab"][aria-selected="true"] *,
-html body button[data-baseweb="tab"][aria-selected="true"] p,
-html body button[data-baseweb="tab"][aria-selected="true"] div[data-testid="stMarkdownContainer"] p {
+.stTabs [data-baseweb="tab"][aria-selected="true"],
+.stTabs [data-baseweb="tab"][aria-selected="true"] p,
+.stTabs [data-baseweb="tab"][aria-selected="true"] span,
+.stTabs [data-baseweb="tab"][aria-selected="true"] * {
     color: #171717 !important;
     -webkit-text-fill-color: #171717 !important;
     font-weight: 700 !important;
@@ -424,6 +394,60 @@ input[type="text"]:focus {
 }
 </style>
 """, unsafe_allow_html=True)
+
+# ── JS: Force tab label colors via MutationObserver (bypasses CSS cascade) ────
+# Injects a hidden iframe that reaches window.parent.document and applies
+# inline style.color directly on every tab <p> — inline styles beat all CSS.
+components.html("""
+<script>
+(function() {
+  function applyTabColors(doc) {
+    try {
+      var buttons = doc.querySelectorAll('button[data-baseweb="tab"]');
+      buttons.forEach(function(btn) {
+        var isActive = btn.getAttribute('aria-selected') === 'true';
+        var color = isActive ? '#171717' : '#3a3a35';
+        var weight = isActive ? '700' : '500';
+        // Apply to the button itself and every descendant
+        [btn].concat(Array.from(btn.querySelectorAll('*'))).forEach(function(el) {
+          el.style.setProperty('color', color, 'important');
+          el.style.setProperty('-webkit-text-fill-color', color, 'important');
+          el.style.setProperty('opacity', '1', 'important');
+          el.style.setProperty('visibility', 'visible', 'important');
+        });
+        btn.style.setProperty('font-weight', weight, 'important');
+      });
+    } catch(e) {}
+  }
+
+  function init() {
+    var doc = window.parent.document;
+    // Apply immediately
+    applyTabColors(doc);
+    // Re-apply on any DOM change (tab clicks cause attribute mutations)
+    var observer = new MutationObserver(function() {
+      applyTabColors(doc);
+    });
+    observer.observe(doc.body, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ['aria-selected'],
+      childList: true
+    });
+  }
+
+  // Wait for DOM to be ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+  // Also fire after a small delay to catch Streamlit's late rendering
+  setTimeout(init, 500);
+  setTimeout(init, 1500);
+})();
+</script>
+""", height=0, width=0)
 
 
 # ── Data Loading with Dynamic Year Extraction ────────────────────────────────
