@@ -482,15 +482,60 @@ def load_all_data():
     # Dates
     adzuna_date = "2026-07-28"
     github_date = "2026-09-05"
+    github_snapshot_count = 1
     try:
         max_sig = con.execute("SELECT MAX(signal_week) FROM main_marts.fct_skill_signals").fetchone()[0]
         if max_sig:
             adzuna_date = str(max_sig)[:10]
-        max_snap = con.execute("SELECT MAX(snapshot_date) FROM main_marts.fct_github_snapshots").fetchone()[0]
-        if max_snap:
-            github_date = str(max_snap)[:10]
+        snap_row = con.execute(
+            "SELECT COUNT(DISTINCT snapshot_date), MAX(snapshot_date) FROM main_marts.fct_github_snapshots"
+        ).fetchone()
+        if snap_row and snap_row[1]:
+            github_snapshot_count = int(snap_row[0])
+            github_date = str(snap_row[1])[:10]
     except Exception:
         pass
+
+    # Fix 1: Real week-over-week job trend per technology
+    try:
+        weekly_df = con.execute("""
+            SELECT tech_id, signal_week, weekly_job_count
+            FROM main_marts.fct_skill_signals
+            ORDER BY tech_id, signal_week
+        """).df()
+        trend_map: dict = {}
+        for tech_id, grp in weekly_df.groupby("tech_id"):
+            grp = grp.sort_values("signal_week")
+            if len(grp) >= 2:
+                latest = int(grp.iloc[-1]["weekly_job_count"])
+                prev   = int(grp.iloc[-2]["weekly_job_count"])
+                if prev > 0:
+                    pct = int(round((latest - prev) / prev * 100))
+                elif latest > 0:
+                    pct = 100
+                else:
+                    pct = 0
+            else:
+                pct = 0  # only one week of data — no delta available
+            trend_map[tech_id] = pct
+        df["job_trend_pct"] = df["tech_id"].map(trend_map).fillna(0).astype(int)
+    except Exception:
+        df["job_trend_pct"] = 0
+
+    # Fix 2: Live total unique job count (distinct job_id across all weeks)
+    total_jobs = 0
+    try:
+        total_jobs = con.execute("""
+            SELECT COUNT(DISTINCT job_id) FROM main_staging.stg_adzuna
+        """).fetchone()[0] or 0
+    except Exception:
+        try:
+            csv_path = str(Path(__file__).parent.parent / "raw" / "adzuna" / "adzuna_extracted.csv")
+            total_jobs = con.execute(
+                f"SELECT COUNT(DISTINCT id) FROM read_csv_auto('{csv_path}', header=true)"
+            ).fetchone()[0] or 0
+        except Exception:
+            total_jobs = 0
 
     con.close()
 
@@ -499,20 +544,13 @@ def load_all_data():
     # Assign category & divergence note
     df["category"] = df["canonical_name"].apply(lambda name: TECH_CATEGORIES.get(name, "DevOps & Tooling"))
     df["divergence_note"] = df["canonical_name"].apply(lambda name: DIVERGENCE_NOTES.get(name, ""))
-    
-    # Calculate simulated trend
-    np.random.seed(42)
-    df["job_trend_pct"] = df["weekly_job_count"].apply(
-        lambda j: int(min(45, max(-20, (hash(str(j)) % 35) - 8))) if j > 0 else 0
-    )
 
-    return df, adzuna_date, github_date, so_year
+    return df, adzuna_date, github_date, so_year, total_jobs, github_snapshot_count
 
 
-df_techs, ADZUNA_DATE, GITHUB_DATE, SO_YEAR = load_all_data()
+df_techs, ADZUNA_DATE, GITHUB_DATE, SO_YEAR, TOTAL_JOBS, GITHUB_SNAPSHOT_COUNT = load_all_data()
 
 TOTAL_TECHS = len(df_techs)
-TOTAL_JOBS = 1788  # Canonical Adzuna IT India deduplicated total
 
 # ── Helper: SignalBadge HTML ──────────────────────────────────────────────────
 def render_signal_badge(signal: str, size: str = "sm", show_dot: bool = True) -> str:
@@ -801,6 +839,7 @@ render_html(f"""
         <span style="width:8px; height:8px; border-radius:50%; background:#2563eb; flex-shrink:0;"></span>
         <span style="color:#73736c;">GitHub:</span>
         <strong style="color:#171717;">{GITHUB_DATE}</strong>
+        <span style="color:#a3a39e; font-size:10px;">({GITHUB_SNAPSHOT_COUNT} snapshot{'s' if GITHUB_SNAPSHOT_COUNT != 1 else ''})</span>
       </div>
       <div style="display:inline-flex; align-items:center; gap:8px; background:#f4f4f0; border:1px solid #e2e2dc; border-radius:4px; padding:5px 12px; color:#52524d;">
         <span style="width:8px; height:8px; border-radius:50%; background:#78716c; flex-shrink:0;"></span>
@@ -854,7 +893,7 @@ with tab_overview:
     with col2:
         render_html(f"""
         <div class="kpi-block">
-          <div class="kpi-num">1,788</div>
+          <div class="kpi-num">{TOTAL_JOBS:,}</div>
           <div class="kpi-title">Job Postings</div>
           <div class="kpi-sub">Adzuna India IT deduplicated</div>
         </div>
