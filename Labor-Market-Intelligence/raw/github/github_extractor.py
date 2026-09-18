@@ -55,7 +55,6 @@ from classifier import classify_repo, score_relevance
 from config import (
     API_TIMEOUT,
     GITHUB_API_BASE,
-    PER_PAGE,
     RATE_LIMIT_BUFFER,
     RATE_LIMIT_SLEEP_SECONDS,
     REPOS_PER_TECH,
@@ -471,6 +470,13 @@ def main() -> None:
 
     print(f"\n=== Done: {ok_count} ok | {skip_count} skipped | {error_count} errors ===")
     print(f"Manifest: {manifest_path}")
+
+    # Exit non-zero if too many technologies failed — lets Dagster detect partial failures
+    if error_count > 0 and len(tech_list) > 0:
+        error_rate = error_count / len(tech_list)
+        if error_rate > 0.10:
+            print(f"[FAIL] Error rate {error_rate:.0%} exceeds 10% threshold. Exiting with code 1.")
+            sys.exit(1)
 
 
 if __name__ == "__main__":

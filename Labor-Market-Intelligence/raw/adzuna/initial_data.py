@@ -5,8 +5,12 @@ from dotenv import load_dotenv
 import time
 
 load_dotenv()
-app_id = os.getenv("Adzuna_app_id")
-app_key = os.getenv('Adzuna_api')
+app_id = (os.getenv("Adzuna_app_id") or os.getenv("ADZUNA_APP_ID") or "").strip()
+app_key = (os.getenv('Adzuna_api') or os.getenv("ADZUNA_API") or "").strip()
+
+if not app_id or not app_key:
+    print("[WARN] Adzuna_app_id or Adzuna_api is missing or empty. Skipping initial API fetch.")
+    exit(0)
 
 file_path = os.path.join(os.path.dirname(__file__), 'output.json')
 progress_path = os.path.join(os.path.dirname(__file__), 'progress.json')
@@ -71,7 +75,7 @@ if not os.path.exists(file_path):
             print('Invalid JSON response, progress saved. Re-run to resume.')
             break
 
-        if not job['results']:
+        if not job.get('results'):
             break
 
         data.extend(job['results'])

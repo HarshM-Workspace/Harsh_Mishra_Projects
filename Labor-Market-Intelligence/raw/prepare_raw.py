@@ -85,9 +85,19 @@ REPO_KEEP_COLS = [
 ]
 
 def build_repos_parquet() -> None:
+    json_files = sorted(glob.glob(REPOS_GLOB))
+
+    # Guard: don't overwrite a good parquet if source JSONs are missing
+    if not json_files:
+        if REPOS_OUT.exists():
+            print(f"  [SKIP] No repo JSON files found but {REPOS_OUT.name} exists. Keeping existing file.")
+        else:
+            print("  [WARN] No repo JSON files found. Run github_extractor.py first.")
+        return
+
     print("Building all_repos.parquet...")
     all_repos = []
-    for json_path in sorted(glob.glob(REPOS_GLOB)):
+    for json_path in json_files:
         p = Path(json_path)
         snapshot_date = p.parent.parent.name   # raw/github/<date>/repos/<slug>.json
         technology_slug = p.stem               # slug = filename without .json
@@ -105,7 +115,7 @@ def build_repos_parquet() -> None:
             all_repos.append(repo)
 
     if not all_repos:
-        print("  [WARN] No repo JSON files found. Run github_extractor.py first.")
+        print("  [WARN] JSON files found but all were empty or unparseable.")
         return
 
     df = pd.DataFrame(all_repos)
@@ -132,9 +142,19 @@ SNAP_KEEP_COLS = [
 ]
 
 def build_snapshots_parquet() -> None:
+    json_files = sorted(glob.glob(SNAPS_GLOB))
+
+    # Guard: don't overwrite a good parquet if source JSONs are missing
+    if not json_files:
+        if SNAPS_OUT.exists():
+            print(f"  [SKIP] No snapshot JSON files found but {SNAPS_OUT.name} exists. Keeping existing file.")
+        else:
+            print("  [WARN] No snapshot JSON files found.")
+        return
+
     print("Building all_snapshots.parquet...")
     all_snaps = []
-    for json_path in sorted(glob.glob(SNAPS_GLOB)):
+    for json_path in json_files:
         with open(json_path, "r", encoding="utf-8") as f:
             try:
                 snap = json.load(f)
@@ -143,7 +163,7 @@ def build_snapshots_parquet() -> None:
         all_snaps.append(snap)
 
     if not all_snaps:
-        print("  [WARN] No snapshot JSON files found.")
+        print("  [WARN] JSON files found but all were unparseable.")
         return
 
     df = pd.DataFrame(all_snaps)

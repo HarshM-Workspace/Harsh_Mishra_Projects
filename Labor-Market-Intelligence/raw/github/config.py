@@ -140,7 +140,6 @@ ECOSYSTEM_STATES = {
 # ---------------------------------------------------------------------------
 GITHUB_API_BASE = "https://api.github.com"
 REPOS_PER_TECH = 100          # Top 100 per technology per snapshot — do not increase without documented reason
-PER_PAGE = 30                 # GitHub Search API max per_page; 100 repos = ceil(100/30) = 4 pages
 # GitHub Search API (/search/repositories) has a dedicated limit of 30 requests/min
 # (distinct from the 5,000 req/hr core API limit). Buffer must be <= 5 to avoid sleeping on every request.
 RATE_LIMIT_BUFFER = 3          # pause if remaining requests fall below this (out of 30)

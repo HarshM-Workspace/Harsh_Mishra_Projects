@@ -35,7 +35,7 @@ def extract_techs(title: str, description: str, ref_table: list[dict]) -> str:
         keyword = row.get("Adzuna", "")
         if not keyword:
             continue
-        pattern = r"\b" + re.escape(keyword) + r"\b"
+        pattern = r"(?<![A-Z0-9])" + re.escape(keyword) + r"(?![A-Z0-9])"
         if re.search(pattern, job_text):
             matched.append(keyword)
     return ",".join(matched)
@@ -97,6 +97,8 @@ def main() -> None:
                 created     = str(job.get("created", ""))[:10]
                 location    = (job.get("location") or {}).get("display_name", "")
                 techs       = extract_techs(title, description, dim_table)
+                if not techs:
+                    continue
 
                 writer.writerow([job_id, created, title, location, techs])
                 existing_ids.add(job_id)

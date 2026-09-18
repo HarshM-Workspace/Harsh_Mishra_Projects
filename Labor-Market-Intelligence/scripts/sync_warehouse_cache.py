@@ -84,28 +84,30 @@ def main() -> int:
             # Ensure all_repos.parquet is also satisfied for staging view
             import pandas as pd
             if not repos_out.exists():
+                # Write an empty parquet with the correct schema so dbt's
+                # read_parquet() doesn't crash, but no fake rows enter staging.
                 pd.DataFrame({
-                    "id": ["1"],
-                    "full_name": ["org/cached_repo"],
-                    "name": ["cached_repo"],
-                    "_technology_slug": ["python"],
-                    "_snapshot_date": [str(latest_date)],
-                    "description": ["Cached from MotherDuck"],
-                    "language": ["Python"],
-                    "stargazers_count": [1000],
-                    "forks_count": [100],
-                    "created_at": ["2022-01-01T00:00:00Z"],
-                    "updated_at": ["2026-01-01T00:00:00Z"],
-                    "pushed_at": ["2026-08-01T00:00:00Z"],
-                    "fork": [False],
-                    "archived": [False],
-                    "disabled": [False],
-                    "hard_excluded": [False],
-                    "exclude_reason": [None],
-                    "quality_class": ["project"],
-                    "quality_score": [1.0],
-                    "relevance_score": [3.0],
-                    "is_usable": [True],
+                    "id": pd.Series(dtype="str"),
+                    "full_name": pd.Series(dtype="str"),
+                    "name": pd.Series(dtype="str"),
+                    "_technology_slug": pd.Series(dtype="str"),
+                    "_snapshot_date": pd.Series(dtype="str"),
+                    "description": pd.Series(dtype="str"),
+                    "language": pd.Series(dtype="str"),
+                    "stargazers_count": pd.Series(dtype="int64"),
+                    "forks_count": pd.Series(dtype="int64"),
+                    "created_at": pd.Series(dtype="str"),
+                    "updated_at": pd.Series(dtype="str"),
+                    "pushed_at": pd.Series(dtype="str"),
+                    "fork": pd.Series(dtype="bool"),
+                    "archived": pd.Series(dtype="bool"),
+                    "disabled": pd.Series(dtype="bool"),
+                    "hard_excluded": pd.Series(dtype="bool"),
+                    "exclude_reason": pd.Series(dtype="str"),
+                    "quality_class": pd.Series(dtype="str"),
+                    "quality_score": pd.Series(dtype="float64"),
+                    "relevance_score": pd.Series(dtype="float64"),
+                    "is_usable": pd.Series(dtype="bool"),
                 }).to_parquet(repos_out, index=False)
                 print(f"  Wrote {repos_out}")
 

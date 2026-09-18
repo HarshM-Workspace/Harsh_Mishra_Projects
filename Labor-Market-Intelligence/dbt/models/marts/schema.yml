@@ -42,3 +42,19 @@ models:
           - accepted_values:
               arguments:
                 values: ['thriving', 'demand_led', 'hype_led', 'weak']
+
+  - name: fct_github_snapshots
+    description: "GitHub ecosystem snapshot metrics — one row per technology per snapshot date"
+    columns:
+      - name: technology_name
+        tests:
+          - not_null
+      - name: snapshot_date
+        tests:
+          - not_null
+      - name: observed_repositories
+        tests:
+          - not_null
+      - name: usable_repositories
+        tests:
+          - not_null

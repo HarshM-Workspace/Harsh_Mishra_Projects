@@ -126,10 +126,11 @@ combined as (
     left join so_with_tech so
         on a.tech_id = so.tech_id
 
-    -- Left join to nearest GitHub snapshot
+    -- Left join to nearest GitHub snapshot on or before each week
     left join (
         select
-            gh1.tech_id,
+            a2.tech_id,
+            a2.week_start,
             gh1.snapshot_date,
             gh1.usable_repositories,
             gh1.median_stars,
@@ -137,13 +138,16 @@ combined as (
             gh1.active_repository_ratio,
             gh1.top5_star_concentration,
             gh1.new_to_top100_ratio,
-            -- rank snapshots for each tech, pick most recent
+            -- rank snapshots per tech per week, pick most recent on or before the week
             row_number() over (
-                partition by gh1.tech_id
+                partition by a2.tech_id, a2.week_start
                 order by gh1.snapshot_date desc
             ) as rn
-        from github_with_tech gh1
-    ) gh on a.tech_id = gh.tech_id and gh.rn = 1
+        from adzuna_with_tech a2
+        inner join github_with_tech gh1
+            on a2.tech_id = gh1.tech_id
+            and gh1.snapshot_date <= a2.week_start
+    ) gh on a.tech_id = gh.tech_id and a.week_start = gh.week_start and gh.rn = 1
 )
 
 select

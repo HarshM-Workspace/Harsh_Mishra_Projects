@@ -12,7 +12,7 @@ ensuring dbt only runs after fresh raw data is available.
 
 from pathlib import Path
 
-from dagster import AssetExecutionContext
+from dagster import AssetExecutionContext, AssetKey
 from dagster_dbt import DbtCliResource, dbt_assets, DbtProject
 
 # dbt project root
@@ -24,7 +24,13 @@ dbt_project = DbtProject(
 )
 dbt_project.prepare_if_dev()
 
-# This generates one Dagster asset per dbt model automatically
-@dbt_assets(manifest=dbt_project.manifest_path)
+# This generates one Dagster asset per dbt model automatically.
+# non_argument_deps ensures dbt only runs after consolidated_parquet
+# (raw → parquet preparation) has completed, making the Dagster graph complete.
+@dbt_assets(
+    manifest=dbt_project.manifest_path,
+    non_argument_deps={AssetKey("consolidated_parquet")},
+)
 def labor_market_dbt_assets(context: AssetExecutionContext, dbt: DbtCliResource):
     yield from dbt.cli(["run", "--full-refresh"], context=context).stream()
+

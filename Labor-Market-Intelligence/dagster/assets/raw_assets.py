@@ -62,6 +62,8 @@ def stackoverflow_parquet(context: AssetExecutionContext) -> MaterializeResult:
         "DatabaseHaveWorkedWith", "DatabaseWantToWorkWith",
         "WebframeHaveWorkedWith", "WebframeWantToWorkWith",
         "PlatformHaveWorkedWith", "PlatformWantToWorkWith",
+        # Keep demographic signals useful for the dashboard
+        "DevType", "YearsCode", "RemoteWork", "Employment",
     ]
     df = pd.read_csv(csv_path, usecols=lambda c: c in TECH_COLS, low_memory=False)
     tech_only = [c for c in TECH_COLS if c != "ResponseId"]
@@ -88,6 +90,17 @@ def stackoverflow_parquet(context: AssetExecutionContext) -> MaterializeResult:
     tags={"source": "adzuna", "cadence": "daily"},
 )
 def adzuna_jobs_csv(context: AssetExecutionContext) -> MaterializeResult:
+    # Step 1: Fetch new daily data from Adzuna API (skips if today's JSON exists)
+    fetch_script = _RAW / "adzuna" / "daily_data.py"
+    fetch_result = subprocess.run(
+        [_PYTHON, str(fetch_script)],
+        capture_output=True, text=True, cwd=str(_REPO_ROOT)
+    )
+    context.log.info(fetch_result.stdout)
+    if fetch_result.returncode != 0:
+        context.log.warning(f"daily_data.py returned non-zero: {fetch_result.stderr}")
+
+    # Step 2: Build CSV from all accumulated JSON files
     script = _RAW / "adzuna" / "build_adzuna_csv.py"
     result = subprocess.run(
         [_PYTHON, str(script)],

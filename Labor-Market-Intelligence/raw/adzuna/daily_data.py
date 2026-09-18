@@ -78,7 +78,7 @@ if not os.path.exists(file_path):
             print('Invalid JSON response, progress saved. Re-run to resume.')
             break
 
-        if not job['results']:
+        if not job.get('results'):
             break
 
         data.extend(job['results'])
