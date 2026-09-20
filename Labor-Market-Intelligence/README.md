@@ -115,7 +115,7 @@ Labor-Market-Intelligence/
 ### 1. Prerequisites & Environment
 ```bash
 # Clone and enter project directory
-git clone https://github.com/Tw1-Light/Harsh_Mishra_Projects.git
+git clone https://github.com/HarshM-Workspace/Harsh_Mishra_Projects.git
 cd Harsh_Mishra_Projects/Labor-Market-Intelligence
 
 # Create virtual environment & install requirements
