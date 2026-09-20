@@ -3,6 +3,8 @@
 
 # Private / Local Documentation
 PROJECT_CONTEXT.md
+learn.md
+
 
 # DuckDB databases
 *.duckdb

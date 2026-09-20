@@ -13,3 +13,8 @@ __pycache__/
 *.pyc
 .DS_Store
 Thumbs.db
+
+# Private / Local Documentation
+PROJECT_CONTEXT.md
+learn.md
+
