@@ -10,7 +10,7 @@ An ETL pipeline reconciling labor-market data across three independently-structu
 
 **Stack:** Python 3.11, Dagster, dbt-core (dbt-duckdb), DuckDB/MotherDuck, GitHub Actions, Streamlit
 
-See the [project README](./Labor-Market-Intelligence/README.md) for full details.
+See the [project README](./Labor-Market-Intelligence/README.md) for full details, or explore the 🔗 **[Live Interactive Dashboard](https://gwdfj7h57dt7dfwh3itgpy.streamlit.app/)**.
 
 ---
 

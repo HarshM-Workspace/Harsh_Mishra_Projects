@@ -15,6 +15,7 @@ Idempotent: re-running appends only new job IDs not already in the CSV.
 import csv
 import glob
 import json
+import os
 import re
 from pathlib import Path
 
@@ -45,6 +46,23 @@ def main() -> None:
     # Load reference table once
     with open(DIM_TABLE, "r", encoding="utf-8") as f:
         dim_table = json.load(f)
+
+    # If running in CI/cloud where CSV_PATH is missing, restore accumulated jobs from MotherDuck
+    if not CSV_PATH.exists() or CSV_PATH.stat().st_size == 0:
+        token = os.getenv("MotherDuck_token") or os.getenv("MOTHERDUCK_TOKEN")
+        if token:
+            try:
+                import duckdb
+                con = duckdb.connect(f"md:labor_market?motherduck_token={token}", read_only=True)
+                tables = [r[0] for r in con.execute("SHOW TABLES FROM main_staging").fetchall()]
+                if "stg_adzuna_postings" in tables:
+                    df_existing = con.execute("SELECT job_id as id, created_date, title, location, technologies FROM main_staging.stg_adzuna_postings").df()
+                    if not df_existing.empty:
+                        df_existing.to_csv(CSV_PATH, index=False)
+                        print(f"  [INFO] Restored {len(df_existing)} accumulated jobs from MotherDuck cache.")
+                con.close()
+            except Exception as e:
+                print(f"  [WARN] MotherDuck sync check skipped: {e}")
 
     # Load existing IDs to avoid duplicates
     existing_ids: set[str] = set()
