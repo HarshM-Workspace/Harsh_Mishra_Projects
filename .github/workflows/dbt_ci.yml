@@ -21,7 +21,7 @@ jobs:
           cache: "pip"
 
       - name: Install dependencies
-        run: pip install dbt-core dbt-duckdb dbt-utils pandas pyarrow duckdb
+        run: pip install dbt-core dbt-duckdb pandas pyarrow duckdb
 
       - name: Prepare raw parquet files
         working-directory: Labor-Market-Intelligence
