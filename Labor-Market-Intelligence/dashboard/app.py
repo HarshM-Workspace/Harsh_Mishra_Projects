@@ -27,6 +27,14 @@ st.set_page_config(
 _REPO_ROOT = Path(__file__).parent.parent
 _DB_PATH = _REPO_ROOT / "labor_market.duckdb"
 
+# Load local .env if present
+try:
+    from dotenv import load_dotenv
+    if (_REPO_ROOT / ".env").exists():
+        load_dotenv(_REPO_ROOT / ".env")
+except ImportError:
+    pass
+
 # ── Taxonomy Metadata: Categories & Divergence Notes ────────────────────────
 TECH_CATEGORIES = {
     "Python": "Languages",
@@ -427,20 +435,118 @@ def extract_so_year() -> str:
     return "2025"
 
 
+def get_motherduck_token() -> str:
+    """Safely retrieve and sanitize MotherDuck token from st.secrets or environment variables."""
+    token = ""
+    # Try common secret keys in st.secrets
+    try:
+        for key in ["MotherDuck_token", "MOTHERDUCK_TOKEN", "motherduck_token", "motherduckToken", "MD_TOKEN"]:
+            if key in st.secrets:
+                val = st.secrets[key]
+                if val:
+                    token = str(val)
+                    break
+    except Exception:
+        pass
+
+    # Fallback to environment variables
+    if not token:
+        for key in ["MotherDuck_token", "MOTHERDUCK_TOKEN", "motherduck_token", "motherduckToken", "MD_TOKEN"]:
+            val = os.getenv(key)
+            if val:
+                token = str(val)
+                break
+
+    if token:
+        token = token.strip()
+        # Strip accidental enclosing quotes from copy-pasting TOML values
+        while (token.startswith('"') and token.endswith('"')) or (token.startswith("'") and token.endswith("'")):
+            token = token[1:-1].strip()
+        # Strip Bearer prefix if user copied authorization header format
+        if token.lower().startswith("bearer "):
+            token = token[7:].strip()
+
+    return token
+
+
 @st.cache_data(ttl=3600, show_spinner="Connecting to intelligence data warehouse...")
 def load_all_data():
-    try:
-        md_token = st.secrets["MotherDuck_token"]
-    except Exception:
-        md_token = os.getenv("MotherDuck_token", "")
+    md_token = get_motherduck_token()
+    con = None
 
+    # Priority 1: Local DuckDB file if it exists and has required tables
     if _DB_PATH.exists() and _DB_PATH.stat().st_size > 0:
-        con = duckdb.connect(str(_DB_PATH), read_only=True)
-    elif md_token:
-        con = duckdb.connect(f"md:labor_market?motherduck_token={md_token}")
-    else:
-        st.error("No valid database source. Set MotherDuck_token in secrets.")
+        try:
+            local_con = duckdb.connect(str(_DB_PATH), read_only=True)
+            tables = [r[0] for r in local_con.execute("SHOW TABLES").fetchall()]
+            if "dim_technology" in tables or "fct_skill_signals" in tables:
+                con = local_con
+            else:
+                local_con.close()
+        except Exception:
+            pass
+
+    # Priority 2: MotherDuck cloud data warehouse
+    if con is None and md_token:
+        # Expose token via environment variable to keep connection string clean
+        # and prevent Streamlit from redacting error messages to protect secrets
+        os.environ["motherduck_token"] = md_token
+        os.environ["MOTHERDUCK_TOKEN"] = md_token
+
+        try:
+            # Connect to MotherDuck root instance in read-only mode
+            root_con = duckdb.connect("md:", read_only=True)
+            available_dbs = [r[0] for r in root_con.execute("SHOW DATABASES").fetchall()]
+
+            if "labor_market" in available_dbs:
+                root_con.execute("USE labor_market")
+                con = root_con
+            else:
+                root_con.close()
+                st.error(
+                    "### ⚠️ Database `labor_market` Not Found in MotherDuck\n\n"
+                    f"Successfully connected to MotherDuck, but the database **`labor_market`** does not exist on this account.\n\n"
+                    f"**Databases found on your account:** `{available_dbs}`\n\n"
+                    "**How to Fix:**\n"
+                    "1. If you created a new MotherDuck token or account, the database must be initialized.\n"
+                    "2. Run the initialization script locally (or set `MotherDuck_token` in `.env`):\n"
+                    "   ```bash\n"
+                    "   python scripts/create_md_db.py\n"
+                    "   ```\n"
+                    "3. Build the production marts using dbt:\n"
+                    "   ```bash\n"
+                    "   dbt build --target prod\n"
+                    "   ```\n"
+                )
+                st.stop()
+                raise RuntimeError("Database 'labor_market' not found in MotherDuck.")
+        except Exception as md_err:
+            if "Database 'labor_market' not found" in str(md_err):
+                raise
+            err_str = str(md_err)
+            st.error(
+                "### ⚠️ MotherDuck Connection Failed\n\n"
+                f"Could not connect to MotherDuck:\n\n"
+                f"```text\n{err_str}\n```\n\n"
+                "**Troubleshooting Guide:**\n"
+                "1. **Check Streamlit Cloud Secrets**: In your Streamlit app dashboard, navigate to **Settings → Secrets** and ensure you have configured:\n"
+                '   ```toml\n   MotherDuck_token = "your_token_here"\n   ```\n'
+                "2. **Token Validity**: Verify that your token has not expired or been revoked in [MotherDuck Console](https://app.motherduck.com) (Settings → Access Tokens).\n"
+                "3. **Whitespace / Quotes**: Ensure no extra spaces, newlines, or quotes wrap the token string.\n"
+            )
+            st.stop()
+            raise RuntimeError(f"MotherDuck connection failed: {err_str}")
+
+    if con is None:
+        st.error(
+            "### ⚠️ No Data Source Available\n\n"
+            "The dashboard could not find a populated local database (`labor_market.duckdb`) and no valid `MotherDuck_token` was provided.\n\n"
+            "**To fix this on Streamlit Cloud:**\n"
+            "Go to your Streamlit Cloud app settings → **Secrets**, and add your MotherDuck access token:\n"
+            '```toml\nMotherDuck_token = "your_motherduck_token_here"\n```'
+        )
         st.stop()
+        raise RuntimeError("No valid data source available.")
 
     query = """
     WITH latest_signals AS (
@@ -477,7 +583,22 @@ def load_all_data():
     LEFT JOIN latest_gh gh ON lower(d.canonical_name) = lower(gh.technology_name)
     ORDER BY weekly_job_count DESC, gh_usable_repos DESC
     """
-    df = con.execute(query).df()
+    try:
+        df = con.execute(query).df()
+    except Exception as q_err:
+        if con:
+            try:
+                con.close()
+            except Exception:
+                pass
+        st.error(
+            "### ⚠️ Warehouse Schema Error\n\n"
+            f"Connected to database, but failed to query mart models:\n\n"
+            f"```text\n{q_err}\n```\n\n"
+            "Please ensure the dbt production pipeline has run to build all mart tables (`main_marts.dim_technology`, `main_marts.fct_skill_signals`, `main_marts.fct_github_snapshots`)."
+        )
+        st.stop()
+        raise RuntimeError(f"Mart query failed: {q_err}")
 
     # Dates
     adzuna_date = "2026-07-28"
@@ -555,7 +676,11 @@ def load_all_data():
     if total_jobs == 0:
         total_jobs = 1788  # Documented Adzuna India IT baseline raw count
 
-    con.close()
+    if con:
+        try:
+            con.close()
+        except Exception:
+            pass
 
     so_year = extract_so_year()
 
